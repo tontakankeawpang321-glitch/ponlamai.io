@@ -231,7 +231,7 @@
             </div>
 
             <!-- Modal Tabs -->
-            <div class="flex border-b border-gray-100">
+            <div class="flex border-b border-gray-100" id="modal-tabs">
                 <button onclick="switchModalTab('timeline')" id="mtab-timeline" class="flex-1 py-3 text-sm font-medium modal-tab-active transition-colors">
                     <i class="fa-solid fa-calendar-days mr-1"></i> คำนวณวัน
                 </button>
@@ -246,7 +246,7 @@
                 <!-- Content: Timeline -->
                 <div id="modal-content-timeline">
                     <!-- Input Date -->
-                    <div class="mb-6">
+                    <div class="mb-6" id="date-input-container">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">เลือกวันเริ่มปลูก (วันที่ลงดิน)</label>
                         <input type="date" id="start-date" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-leaf-500 focus:border-leaf-500 outline-none text-lg text-center bg-gray-50 text-gray-800">
                     </div>
@@ -862,16 +862,39 @@
             document.getElementById('guide-water').innerText = care.water;
             document.getElementById('guide-fertilizer').innerText = care.fertilizer;
 
+            const dateInputContainer = document.getElementById('date-input-container');
+            const saveBtn = document.getElementById('save-btn');
+            const tabTimeline = document.getElementById('mtab-timeline');
+            const tabGuide = document.getElementById('mtab-guide');
+
             // Date logic
             const dateInput = document.getElementById('start-date');
+            
             if (existingDate) {
+                // Viewing Mode
                 dateInput.valueAsDate = existingDate;
+                dateInputContainer.classList.add('hidden'); // Hide date input
+                saveBtn.classList.add('hidden'); // Hide save button
+                
+                // Show guide tab primarily
+                tabGuide.classList.remove('hidden');
+                
+                // Switch to Guide Tab by default
+                switchModalTab('guide');
             } else {
+                // Adding Mode
                 dateInput.valueAsDate = currentSelectedDate;
+                dateInputContainer.classList.remove('hidden'); // Show date input
+                saveBtn.classList.remove('hidden'); // Show save button
+                
+                // Hide Guide Tab in selection mode
+                tabGuide.classList.add('hidden');
+                
+                // Switch to Timeline Tab
+                switchModalTab('timeline');
             }
             
             calculateDates();
-            switchModalTab('timeline'); 
             document.getElementById('calc-modal').classList.remove('hidden');
         }
 
