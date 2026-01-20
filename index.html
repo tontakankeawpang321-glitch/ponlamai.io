@@ -125,6 +125,10 @@
                 <i class="fa-solid fa-seedling text-yellow-300"></i> ปฏิทินเกษตรไทย
             </h1>
             <div class="flex gap-2">
+                <!-- ปุ่มเครื่องคิดเลข -->
+                <button onclick="openCalculator()" class="bg-white/20 active:bg-white/30 px-3 py-1.5 rounded-lg text-sm transition flex items-center gap-1 hover:bg-white/30">
+                    <i class="fa-solid fa-calculator"></i> <span class="hidden sm:inline">คิดเลข</span>
+                </button>
                  <button onclick="toggleView('schedule')" class="bg-white/20 active:bg-white/30 px-3 py-1.5 rounded-lg text-sm transition flex items-center gap-1">
                     <i class="fa-solid fa-clipboard-list"></i> แปลงของฉัน (<span id="schedule-count">0</span>)
                 </button>
@@ -391,6 +395,45 @@
                 <button onclick="updateMarketData()" class="w-full bg-market-600 hover:bg-market-700 text-white py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
                     <i class="fa-solid fa-rotate"></i> อัพเดทราคา
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculator-modal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs rounded-2xl shadow-2xl animate-pop overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gray-800 text-white p-3 flex justify-between items-center">
+                <h3 class="font-bold"><i class="fa-solid fa-calculator mr-2"></i>เครื่องคิดเลข</h3>
+                <button onclick="closeCalculator()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Display -->
+            <div class="bg-gray-100 p-4 border-b border-gray-200">
+                <input type="text" id="calc-display" class="w-full bg-transparent text-right text-3xl font-mono outline-none text-gray-800" readonly value="0">
+            </div>
+            <!-- Keypad -->
+            <div class="grid grid-cols-4 gap-1 p-2 bg-gray-50">
+                <button onclick="calcClear()" class="col-span-3 bg-red-100 text-red-600 p-3 rounded hover:bg-red-200 font-bold">C</button>
+                <button onclick="calcAppend('/')" class="bg-orange-100 text-orange-600 p-3 rounded hover:bg-orange-200 font-bold">÷</button>
+                
+                <button onclick="calcAppend('7')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">7</button>
+                <button onclick="calcAppend('8')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">8</button>
+                <button onclick="calcAppend('9')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">9</button>
+                <button onclick="calcAppend('*')" class="bg-orange-100 text-orange-600 p-3 rounded hover:bg-orange-200 font-bold">×</button>
+                
+                <button onclick="calcAppend('4')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">4</button>
+                <button onclick="calcAppend('5')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">5</button>
+                <button onclick="calcAppend('6')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">6</button>
+                <button onclick="calcAppend('-')" class="bg-orange-100 text-orange-600 p-3 rounded hover:bg-orange-200 font-bold">-</button>
+                
+                <button onclick="calcAppend('1')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">1</button>
+                <button onclick="calcAppend('2')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">2</button>
+                <button onclick="calcAppend('3')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">3</button>
+                <button onclick="calcAppend('+')" class="bg-orange-100 text-orange-600 p-3 rounded hover:bg-orange-200 font-bold">+</button>
+                
+                <button onclick="calcAppend('0')" class="col-span-2 bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">0</button>
+                <button onclick="calcAppend('.')" class="bg-white shadow-sm p-3 rounded hover:bg-gray-100 font-bold text-lg">.</button>
+                <button onclick="calcEqual()" class="bg-green-500 text-white p-3 rounded hover:bg-green-600 font-bold shadow">=</button>
             </div>
         </div>
     </div>
@@ -844,6 +887,31 @@
                 }
             }
             return care;
+        }
+
+        // --- Calculator Logic ---
+        function openCalculator() {
+            document.getElementById('calculator-modal').classList.remove('hidden');
+        }
+        function closeCalculator() {
+            document.getElementById('calculator-modal').classList.add('hidden');
+        }
+        function calcAppend(val) {
+            const display = document.getElementById('calc-display');
+            if(display.value === '0' && val !== '.') display.value = '';
+            display.value += val;
+        }
+        function calcClear() {
+            document.getElementById('calc-display').value = '0';
+        }
+        function calcEqual() {
+            const display = document.getElementById('calc-display');
+            try {
+                display.value = eval(display.value) || '0';
+            } catch {
+                display.value = 'Error';
+                setTimeout(calcClear, 1000);
+            }
         }
 
         // --- Calculator Modal ---
