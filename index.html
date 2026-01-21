@@ -34,6 +34,10 @@
                         veg: {
                             500: '#84cc16', // lime-500
                             600: '#65a30d', // lime-600
+                        },
+                        bot: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
                         }
                     },
                     animation: {
@@ -41,6 +45,7 @@
                         'slide-up': 'slideUp 0.3s ease-out forwards',
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite',
                     },
                     keyframes: {
                         pop: {
@@ -114,9 +119,48 @@
             border-bottom: 2px solid transparent;
             color: #64748b;
         }
+
+        /* Chat Styles */
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+        .chat-user {
+            background-color: #7c3aed;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bot {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #e5e7eb;
+        }
+        .typing-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #9ca3af;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
     </style>
 </head>
-<body class="text-gray-700 pb-24">
+<body class="text-gray-700 pb-24 relative min-h-screen">
 
     <!-- Navbar (Sticky Top) -->
     <nav class="bg-leaf-700 text-white p-3 shadow-md sticky top-0 z-50">
@@ -214,6 +258,46 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Floating Chatbot Button -->
+    <button onclick="toggleChat()" class="fixed z-50 bottom-24 right-4 md:bottom-8 md:right-8 bg-bot-600 hover:bg-bot-500 text-white p-4 rounded-full shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center w-14 h-14 border-4 border-white">
+        <i class="fa-solid fa-robot text-2xl animate-bounce-slow"></i>
+    </button>
+
+    <!-- Chatbot Window -->
+    <div id="chatbot-window" class="fixed z-[60] bottom-0 right-0 w-full sm:w-[350px] sm:bottom-24 sm:right-4 h-[80vh] sm:h-[500px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transform translate-y-full transition-transform duration-300 border border-gray-200 hidden">
+        
+        <!-- Chat Header -->
+        <div class="bg-bot-600 text-white p-4 rounded-t-2xl flex justify-between items-center shadow-md">
+            <div class="flex items-center gap-2">
+                <div class="bg-white/20 p-2 rounded-full">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm">ผู้ช่วยเกษตร AI</h3>
+                    <p class="text-[10px] text-white/80 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> ออนไลน์</p>
+                </div>
+            </div>
+            <button onclick="toggleChat()" class="text-white/80 hover:text-white transition">
+                <i class="fa-solid fa-chevron-down sm:fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto bg-gray-50 flex flex-col gap-2 custom-scrollbar">
+            <div class="chat-msg chat-bot">
+                สวัสดีครับ! 🌾 มีเรื่องการปลูกพืช ราคาตลาด หรือปัญหาโรคพืช สอบถามได้เลยครับ
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
+            <input type="text" id="chat-input" placeholder="พิมพ์คำถาม..." class="flex-grow bg-gray-100 border-0 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-bot-500 focus:outline-none" onkeypress="handleChatEnter(event)">
+            <button onclick="sendChatMessage()" class="bg-bot-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-sm hover:bg-bot-500 transition active:scale-95">
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Modal: Planting Calculator & Guide (Dialog) -->
@@ -1124,6 +1208,95 @@
         
         function formatDateShort(date) {
             return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+        }
+
+        // --- Chat Functions ---
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatbot-window');
+            if (chatWindow.classList.contains('hidden')) {
+                chatWindow.classList.remove('hidden');
+                // Allow a tiny delay for transition to work if not hidden immediately
+                setTimeout(() => {
+                    chatWindow.classList.remove('translate-y-full');
+                }, 10);
+            } else {
+                chatWindow.classList.add('translate-y-full');
+                setTimeout(() => {
+                    chatWindow.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function appendMessage(text, isUser) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `chat-msg ${isUser ? 'chat-user' : 'chat-bot'} animate-pop`;
+            div.innerHTML = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.id = 'typing-indicator';
+            div.className = `chat-msg chat-bot`;
+            div.innerHTML = `<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // 1. Show User Message
+            appendMessage(text, true);
+            input.value = '';
+
+            // 2. Show Typing
+            showTypingIndicator();
+
+            // 3. Call Backend
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'chat', message: text })
+                });
+
+                let reply = "ขออภัยครับ ระบบมีปัญหาเล็กน้อย";
+                if (response.ok) {
+                    const data = await response.json();
+                    reply = data.reply || "ไม่ได้รับคำตอบจากระบบ";
+                } else {
+                    // Fallback simulation if backend fails (common in demos)
+                    await new Promise(r => setTimeout(r, 1000));
+                    if (text.includes('ราคา')) reply = "ราคาผันผวนตามตลาดกลางครับ แนะนำให้ตรวจสอบที่หน้าตลาดพันธุ์ไม้เพื่อข้อมูลล่าสุดครับ";
+                    else if (text.includes('ปลูก')) reply = "การปลูกพืชแต่ละชนิดมีเคล็ดลับต่างกันครับ คุณสนใจพืชชนิดไหนเป็นพิเศษไหมครับ?";
+                    else reply = "ผมเป็น AI ผู้ช่วยเกษตร ยินดีให้คำปรึกษาครับ";
+                }
+
+                removeTypingIndicator();
+                appendMessage(reply, false);
+
+            } catch (error) {
+                removeTypingIndicator();
+                appendMessage("เกิดข้อผิดพลาดในการเชื่อมต่อครับ", false);
+                console.error(error);
+            }
         }
 
     </script>
