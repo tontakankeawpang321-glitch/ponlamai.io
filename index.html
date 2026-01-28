@@ -10,6 +10,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 (สำหรับปุ่มลบสวยๆ) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
         tailwind.config = {
@@ -29,7 +31,7 @@
         }
     </script>
     <style>
-        body { background-color: #f8fafc; overscroll-behavior-y: none; }
+        body { background-color: #f8fafc; overscroll-behavior-y: none; font-family: 'Kanit', sans-serif; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .tab-active { background-color: white; color: #15803d; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -47,6 +49,12 @@
         .z-fab { z-index: 90 !important; }
         .z-chat-window { z-index: 110 !important; }
         .z-modal-overlay { z-index: 1000 !important; } /* Highest priority for modals */
+        
+        /* SweetAlert Custom Font */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            font-family: 'Kanit', sans-serif !important;
+            border-radius: 1rem !important;
+        }
     </style>
 </head>
 <body class="text-gray-700 pb-28 relative min-h-screen">
@@ -749,13 +757,42 @@
             reader.readAsDataURL(file);
         }
 
+        // Updated Delete Function using SweetAlert
         function deleteSchedule(event, id) {
-            event.stopPropagation();
-            if(confirm('ยืนยันการลบรายการนี้ใช่หรือไม่? 🗑️')) {
-                mySchedules = mySchedules.filter(item => item.id !== id);
-                localStorage.setItem('myPlantingSchedule', JSON.stringify(mySchedules));
-                renderScheduleList();
-            }
+            event.stopPropagation(); // Stop clicking to details
+            
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบแปลงปลูกนี้ใช่หรือไม่",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444', // Red-500
+                cancelButtonColor: '#3b82f6', // Blue-500
+                confirmButtonText: '<i class="fa-solid fa-trash-can"></i> ลบเลย',
+                cancelButtonText: 'ยกเลิก',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'rounded-lg px-4 py-2',
+                    cancelButton: 'rounded-lg px-4 py-2'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Logic การลบ
+                    mySchedules = mySchedules.filter(item => item.id !== id);
+                    localStorage.setItem('myPlantingSchedule', JSON.stringify(mySchedules));
+                    renderScheduleList();
+
+                    // แจ้งเตือนว่าลบเสร็จแล้ว (Auto close)
+                    Swal.fire({
+                        title: 'ลบเรียบร้อย!',
+                        text: 'รายการถูกลบออกจากแปลงแล้ว',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
         }
 
         // --- Modal Logic ---
@@ -957,7 +994,7 @@
                     const data = await response.json();
                     reply = data.reply || "ไม่ได้รับคำตอบจากระบบ";
                 } else {
-                     throw new Error("Backend non-200");
+                      throw new Error("Backend non-200");
                 }
 
             } catch (error) {
