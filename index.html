@@ -23,15 +23,6 @@
                         market: { 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7' },
                         veg: { 500: '#84cc16', 600: '#65a30d' },
                         bot: { 500: '#8b5cf6', 600: '#7c3aed' }
-                    },
-                    zIndex: {
-                        '60': '60',
-                        '70': '70',
-                        '80': '80',
-                        '90': '90',
-                        '100': '100',
-                        'modal': '200',
-                        'chat': '150',
                     }
                 }
             }
@@ -50,7 +41,12 @@
         .chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 0.9rem; margin-bottom: 8px; }
         .chat-user { background-color: #7c3aed; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
         .chat-bot { background-color: #f3f4f6; color: #1f2937; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #e5e7eb; }
-        .bottom-nav-fixed { z-index: 9999 !important; }
+        
+        /* Force Z-Index Layers */
+        .z-bottom-nav { z-index: 100 !important; }
+        .z-fab { z-index: 90 !important; }
+        .z-chat-window { z-index: 110 !important; }
+        .z-modal-overlay { z-index: 1000 !important; } /* Highest priority for modals */
     </style>
 </head>
 <body class="text-gray-700 pb-28 relative min-h-screen">
@@ -143,12 +139,12 @@
     </div>
 
     <!-- Floating Chatbot Button -->
-    <button onclick="toggleChat()" class="fixed z-50 bottom-28 right-4 md:bottom-8 md:right-8 bg-bot-600 hover:bg-bot-500 text-white p-4 rounded-full shadow-xl transition-transform transform hover:scale-110 active:scale-95 flex items-center justify-center w-14 h-14 border-4 border-white">
+    <button onclick="toggleChat()" class="fixed z-fab bottom-28 right-4 md:bottom-8 md:right-8 bg-bot-600 hover:bg-bot-500 text-white p-4 rounded-full shadow-xl transition-transform transform hover:scale-110 active:scale-95 flex items-center justify-center w-14 h-14 border-4 border-white">
         <i class="fa-solid fa-robot text-2xl animate-bounce-slow"></i>
     </button>
 
     <!-- Chatbot Window -->
-    <div id="chatbot-window" class="fixed z-chat bottom-0 right-0 w-full sm:w-[350px] sm:bottom-28 sm:right-4 h-[70vh] sm:h-[500px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transform translate-y-full transition-transform duration-300 border border-gray-200 hidden">
+    <div id="chatbot-window" class="fixed z-chat-window bottom-0 right-0 w-full sm:w-[350px] sm:bottom-28 sm:right-4 h-[70vh] sm:h-[500px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transform translate-y-full transition-transform duration-300 border border-gray-200 hidden">
         <div class="bg-bot-600 text-white p-4 rounded-t-2xl flex justify-between items-center shadow-md">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-robot bg-white/20 p-2 rounded-full"></i>
@@ -157,7 +153,7 @@
                     <p class="text-[10px] text-white/80 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> ออนไลน์</p>
                 </div>
             </div>
-            <button onclick="toggleChat()" class="text-white/80 hover:text-white"><i class="fa-solid fa-chevron-down"></i></button>
+            <button onclick="toggleChat()" class="text-white/80 hover:text-white"><i class="fa-solid fa-chevron-down sm:fa-xmark text-lg"></i></button>
         </div>
         <div id="chat-messages" class="flex-grow p-4 overflow-y-auto bg-gray-50 flex flex-col gap-2">
             <div class="chat-msg chat-bot">สวัสดีครับ! 🌾 มีเรื่องการปลูกพืช สอบถามได้เลยครับ</div>
@@ -169,8 +165,8 @@
     </div>
 
     <!-- Modal: Planting Calculator & Guide -->
-    <div id="calc-modal" class="fixed inset-0 bg-black/60 z-modal hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full sm:w-[450px] sm:rounded-2xl rounded-t-2xl shadow-2xl animate-slide-up flex flex-col max-h-[80vh]">
+    <div id="calc-modal" class="fixed inset-0 bg-black/60 z-modal-overlay hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full sm:w-[450px] sm:rounded-2xl rounded-t-2xl shadow-2xl animate-slide-up flex flex-col max-h-[85vh] sm:max-h-[90vh]">
             <div class="p-4 bg-leaf-50 border-b border-gray-100 rounded-t-2xl flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <span id="modal-icon" class="text-3xl">🥭</span>
@@ -224,7 +220,8 @@
                     </div>
                 </div>
             </div>
-            <div class="p-4 border-t border-gray-100 bg-white rounded-b-2xl pb-6" id="modal-footer-action">
+            <!-- Added extra bottom padding (pb-8) to ensure button is not too close to edge -->
+            <div class="p-4 border-t border-gray-100 bg-white rounded-b-2xl pb-8" id="modal-footer-action">
                 <button onclick="saveSchedule()" class="w-full bg-leaf-600 hover:bg-leaf-700 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95" id="save-btn">
                     <i class="fa-regular fa-floppy-disk mr-2"></i> บันทึกตารางปลูก
                 </button>
@@ -233,7 +230,7 @@
     </div>
 
     <!-- Navigation Bottom Bar -->
-    <div class="bottom-nav-fixed fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-[100] shadow-[0_-5px_10px_rgba(0,0,0,0.05)] md:hidden">
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-bottom-nav shadow-[0_-5px_10px_rgba(0,0,0,0.05)] md:hidden">
         <button onclick="toggleView('calendar')" class="flex flex-col items-center gap-1 text-leaf-600">
             <i class="fa-solid fa-calendar-check text-xl"></i>
             <span class="text-[10px]">เลือกปลูก</span>
@@ -252,7 +249,7 @@
     </div>
 
     <!-- Market Modal -->
-    <div id="market-modal" class="fixed inset-0 bg-black/60 z-modal hidden flex items-center justify-center px-0 sm:px-4 backdrop-blur-sm">
+    <div id="market-modal" class="fixed inset-0 bg-black/60 z-modal-overlay hidden flex items-center justify-center px-0 sm:px-4 backdrop-blur-sm">
         <div class="bg-white w-full h-full sm:h-[600px] sm:max-w-lg sm:rounded-2xl flex flex-col animate-pop relative overflow-hidden">
             <div class="p-4 bg-market-600 text-white shadow-md z-10">
                 <div class="flex justify-between items-center mb-2">
@@ -286,7 +283,7 @@
     </div>
 
     <!-- Calculator Modal -->
-    <div id="calculator-modal" class="fixed inset-0 bg-black/60 z-modal hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div id="calculator-modal" class="fixed inset-0 bg-black/60 z-modal-overlay hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-2xl shadow-2xl animate-pop overflow-hidden">
             <div class="bg-gray-800 text-white p-3 flex justify-between items-center">
                 <h3 class="font-bold"><i class="fa-solid fa-calculator mr-2"></i>เครื่องคิดเลข</h3>
@@ -456,7 +453,7 @@
         let currentPlanting = null; 
         let mySchedules = JSON.parse(localStorage.getItem('myPlantingSchedule')) || [];
 
-        // --- Core Functions ---
+        // --- Core Functions (Declared First) ---
 
         function toggleView(view) {
             document.getElementById('calendar-view').classList.add('hidden');
@@ -971,7 +968,7 @@
                 else if (text.includes('ปลูก') || text.includes('วิธี')) reply = "การปลูกพืชต้องดูฤดูกาลเป็นหลักครับ ช่วงนี้แนะนำพืชทนแล้งหรือพืชระยะสั้นครับ";
                 else if (text.includes('ปุ๋ย')) reply = "ใส่ปุ๋ยคอกรองพื้นก่อนปลูก และเติมปุ๋ยเคมีสูตรเสมอเมื่อต้นตั้งตัวได้ครับ";
                 else if (text.includes('สวัสดี') || text.includes('ดีครับ')) reply = "สวัสดีครับ! มีอะไรให้ผมช่วยเรื่องเกษตรไหมครับ?";
-                else reply = "ขออภัยครับ ผมยังเรียนรู้ไม่ครบถ้วน ลองถามเรื่อง ราคา, วิธีปลูก หรือ ปุ๋ย ดูนะครับ (ระบบจำลอง)";
+                else reply = "ขออภัยครับ ผมยังเรียนรู้ไม่ครบถ้วน ลองถามเรื่อง ราคา, วิธีปลูก หรือ ปุ๋ย ดูนะครับ";
             } finally {
                 removeTypingIndicator();
                 appendMessage(reply, false);
