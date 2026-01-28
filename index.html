@@ -50,18 +50,7 @@
         .chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 0.9rem; margin-bottom: 8px; }
         .chat-user { background-color: #7c3aed; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
         .chat-bot { background-color: #f3f4f6; color: #1f2937; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #e5e7eb; }
-        
-        /* Force Bottom Nav to be visible and on top */
-        .bottom-nav-fixed { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            z-index: 9999 !important; 
-            background-color: white;
-            border-top: 1px solid #e5e7eb;
-            display: flex !important; /* Force display */
-        }
+        .bottom-nav-fixed { z-index: 9999 !important; }
     </style>
 </head>
 <body class="text-gray-700 pb-28 relative min-h-screen">
@@ -154,12 +143,12 @@
     </div>
 
     <!-- Floating Chatbot Button -->
-    <button onclick="toggleChat()" class="fixed z-[80] bottom-28 right-4 bg-bot-600 hover:bg-bot-500 text-white p-4 rounded-full shadow-xl transition-transform transform hover:scale-110 active:scale-95 flex items-center justify-center w-14 h-14 border-4 border-white">
+    <button onclick="toggleChat()" class="fixed z-50 bottom-28 right-4 md:bottom-8 md:right-8 bg-bot-600 hover:bg-bot-500 text-white p-4 rounded-full shadow-xl transition-transform transform hover:scale-110 active:scale-95 flex items-center justify-center w-14 h-14 border-4 border-white">
         <i class="fa-solid fa-robot text-2xl animate-bounce-slow"></i>
     </button>
 
     <!-- Chatbot Window -->
-    <div id="chatbot-window" class="fixed z-[90] bottom-0 right-0 w-full sm:w-[350px] sm:bottom-28 sm:right-4 h-[70vh] sm:h-[500px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transform translate-y-full transition-transform duration-300 border border-gray-200 hidden">
+    <div id="chatbot-window" class="fixed z-chat bottom-0 right-0 w-full sm:w-[350px] sm:bottom-28 sm:right-4 h-[70vh] sm:h-[500px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col transform translate-y-full transition-transform duration-300 border border-gray-200 hidden">
         <div class="bg-bot-600 text-white p-4 rounded-t-2xl flex justify-between items-center shadow-md">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-robot bg-white/20 p-2 rounded-full"></i>
@@ -243,8 +232,8 @@
         </div>
     </div>
 
-    <!-- Navigation Bottom Bar (FORCED TO DISPLAY) -->
-    <div class="bottom-nav-fixed flex justify-around py-3 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
+    <!-- Navigation Bottom Bar -->
+    <div class="bottom-nav-fixed fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-[100] shadow-[0_-5px_10px_rgba(0,0,0,0.05)] md:hidden">
         <button onclick="toggleView('calendar')" class="flex flex-col items-center gap-1 text-leaf-600">
             <i class="fa-solid fa-calendar-check text-xl"></i>
             <span class="text-[10px]">เลือกปลูก</span>
@@ -956,13 +945,14 @@
             try {
                 // Add Timeout to fetch
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 seconds timeout
 
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'chat', message: text }),
-                    signal: controller.signal
+                    signal: controller.signal,
+                    credentials: 'omit' // Prevent cookie issues
                 });
                 clearTimeout(timeoutId);
 
@@ -974,14 +964,18 @@
                 }
 
             } catch (error) {
-                // Fallback simulation immediately if error
-                if (text.includes('ราคา')) reply = "ราคาผันผวนตามตลาดกลางครับ แนะนำให้ตรวจสอบที่หน้าตลาดพันธุ์ไม้เพื่อข้อมูลล่าสุดครับ";
-                else if (text.includes('ปลูก')) reply = "การปลูกพืชแต่ละชนิดมีเคล็ดลับต่างกันครับ คุณสนใจพืชชนิดไหนเป็นพิเศษไหมครับ?";
-                else reply = "ผมเป็น AI ผู้ช่วยเกษตร ยินดีให้คำปรึกษาครับ (ขณะนี้ระบบกำลังปรับปรุง)";
+                console.warn("Chatbot fallback:", error);
+                // Fallback simulation
+                await new Promise(r => setTimeout(r, 500)); // Short delay for realism
+                if (text.includes('ราคา') || text.includes('บาท')) reply = "ราคาตลาดวันนี้ผันผวนเล็กน้อยครับ แนะนำให้เช็คที่ตารางราคาเพื่อความแม่นยำครับ";
+                else if (text.includes('ปลูก') || text.includes('วิธี')) reply = "การปลูกพืชต้องดูฤดูกาลเป็นหลักครับ ช่วงนี้แนะนำพืชทนแล้งหรือพืชระยะสั้นครับ";
+                else if (text.includes('ปุ๋ย')) reply = "ใส่ปุ๋ยคอกรองพื้นก่อนปลูก และเติมปุ๋ยเคมีสูตรเสมอเมื่อต้นตั้งตัวได้ครับ";
+                else if (text.includes('สวัสดี') || text.includes('ดีครับ')) reply = "สวัสดีครับ! มีอะไรให้ผมช่วยเรื่องเกษตรไหมครับ?";
+                else reply = "ขออภัยครับ ผมยังเรียนรู้ไม่ครบถ้วน ลองถามเรื่อง ราคา, วิธีปลูก หรือ ปุ๋ย ดูนะครับ (ระบบจำลอง)";
+            } finally {
+                removeTypingIndicator();
+                appendMessage(reply, false);
             }
-
-            removeTypingIndicator();
-            appendMessage(reply, false);
         }
 
         function appendMessage(text, isUser) {
